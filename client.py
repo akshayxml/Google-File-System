@@ -8,173 +8,171 @@ import gfs_pb2
 from common import Config as cfg
 from common import isint
 
-def list_files(file_path):
-    master = "localhost:{}".format(cfg.master_loc)
-    with grpc.insecure_channel(master) as channel:
-        stub = gfs_pb2_grpc.MasterServerToClientStub(channel)
-        request = gfs_pb2.String(st=file_path)
-        master_response = stub.ListFiles(request).st
-        fps = master_response.split("|")
-        print(fps)
+class Client():
 
-def create_file(file_path):
+    def __init__(self):
+        masterChannel = grpc.insecure_channel("127.0.0.1:"+str(cfg.master_loc))
+        self.masterStub = gfs_pb2_grpc.MasterStub(masterChannel)
 
-    master_addr = "localhost:{}".format(cfg.master_loc)
-    with grpc.insecure_channel(master_addr) as channel:
-        stub = gfs_pb2_grpc.MasterServerToClientStub(channel)
-        request = gfs_pb2.String(st=file_path)
-        master_response = stub.CreateFile(request).st
-        print("Response from master: {}".format(master_response))
+    def createFile(self,filePath):
+        request = gfs_pb2.String(st=filePath)
+        masterResponse = self.masterStub.CreateFile(request).st
+        print("Response from master: {}".format(masterResponse))
 
-    if master_response.startswith("ERROR"):
-        return -1
+        if masterResponse.startswith("ERROR"):
+            return -1
 
-    data = master_response.split("|")
-    chunk_handle = data[0]
-    for loc in data[1:]:
-        chunkserver_addr = "localhost:{}".format(loc)
-        with grpc.insecure_channel(chunkserver_addr) as channel:
-            stub = gfs_pb2_grpc.ChunkServerToClientStub(channel)
-            request = gfs_pb2.String(st=chunk_handle)
-            cs_response = stub.Create(request).st
-            print("Response from chunkserver {} : {}".format(loc, cs_response))
+        data = masterResponse.split("|")
+        chunkHandle = data[0]
+        for loc in data[1:]:
+            csAddress = "localhost:{}".format(loc)
+            channel = grpc.insecure_channel(csAddress)
+            stub = gfs_pb2_grpc.ChunkServerStub(channel)
+            request = gfs_pb2.String(st=chunkHandle)
+            response = stub.Create(request).st
+            print("Response from chunkserver {} : {}".format(loc, response))
 
-def append_file(file_path, input_data):
-    master_addr = "localhost:{}".format(cfg.master_loc)
-    with grpc.insecure_channel(master_addr) as channel:
-        stub = gfs_pb2_grpc.MasterServerToClientStub(channel)
-        request = gfs_pb2.String(st=file_path)
-        master_response = stub.AppendFile(request).st
-        print("Response from master: {}".format(master_response))
+    def listFile(self,filePath):
+        request = gfs_pb2.String(st=filePath)
+        masterResponse = self.masterStub.ListFiles(request).st
+        files = masterResponse.split("|")
+        print(files)
 
-    if master_response.startswith("ERROR"):
-        return -1
+    def appendFile(self,filePath, inputData):
+        request = gfs_pb2.String(st=filePath)
+        masterResponse = self.masterStub.AppendFile(request).st
+        print("Response from master: {}".format(masterResponse))
 
-    input_size = len(input_data)
-    data = master_response.split("|")
-    chunk_handle = data[0]
+        if masterResponse.startswith("ERROR"):
+            return -1
 
-    for loc in data[1:]:
-        chunkserver_addr = "localhost:{}".format(loc)
-        with grpc.insecure_channel(chunkserver_addr) as channel:
-            stub = gfs_pb2_grpc.ChunkServerToClientStub(channel)
-            request = gfs_pb2.String(st=chunk_handle)
-            cs_response = stub.GetChunkSpace(request).st
-            print("Response from chunkserver {} : {}".format(loc, cs_response))
+        inputSize = len(inputData)
+        data = masterResponse.split("|")
+        chunkHandle = data[0]
 
-            if cs_response.startswith("ERROR"):
+        for loc in data[1:]:
+            csAddress = "localhost:{}".format(loc)
+            channel = grpc.insecure_channel(csAddress)
+            stub = gfs_pb2_grpc.ChunkServerStub(channel)
+            request = gfs_pb2.String(st=chunkHandle)
+            response = stub.GetChunkSpace(request).st
+            print("Response from chunkserver {} : {}".format(loc, response))
+
+            if response.startswith("ERROR"):
                 return -1
 
-            rem_space = int(cs_response)
+            spaceLeft = int(response)
 
-            if rem_space >= input_size:
-                st = chunk_handle + "|" + input_data
+            if spaceLeft >= inputSize:
+                st = chunkHandle + "|" + inputData
                 request = gfs_pb2.String(st=st)
-                cs_response = stub.Append(request).st
-                print("Response from chunkserver {} : {}".format(loc, cs_response))
+                response = stub.Append(request).st
+                print("Response from chunkserver {} : {}".format(loc, response))
             else:
-                inp1, inp2 = input_data[:rem_space], input_data[rem_space:]
-                st = chunk_handle + "|" + inp1
+                inp1, inp2 = inputData[:spaceLeft], inputData[spaceLeft:]
+                st = chunkHandle + "|" + inp1
                 request = gfs_pb2.String(st=st)
-                cs_response = stub.Append(request).st
-                print("Response from chunkserver {} : {}".format(loc, cs_response))
+                response = stub.Append(request).st
+                print("Response from chunkserver {} : {}".format(loc, response))
 
-    if rem_space >= input_size:
+        if spaceLeft >= inputSize:
+            return 0
+
+        # if need to add more chunks then continue
+        st = filePath + "|" + chunkHandle
+        request = gfs_pb2.String(st=st)
+        masterResponse = self.masterStub.CreateChunk(request).st
+        print("Response from master: {}".format(masterResponse))
+
+        data = masterResponse.split("|")
+        chunkHandle = data[0]
+        for loc in data[1:]:
+            csAddress = "localhost:{}".format(loc)
+            channel = grpc.insecure_channel(csAddress)
+            stub = gfs_pb2_grpc.ChunkServerStub(channel)
+            request = gfs_pb2.String(st=chunkHandle)
+            response = stub.Create(request).st
+            print("Response from chunkserver {} : {}".format(loc, response))
+
+        self.appendFile(filePath, inp2)
         return 0
 
-    # if need to add more chunks then continue
-    with grpc.insecure_channel(master_addr) as channel:
-        stub = gfs_pb2_grpc.MasterServerToClientStub(channel)
-        st = file_path + "|" + chunk_handle
+    def readFile(self,filePath, offset, numbytes):
+        st = filePath + "|" + str(offset) + "|" + str(numbytes)
         request = gfs_pb2.String(st=st)
-        master_response = stub.CreateChunk(request).st
-        print("Response from master: {}".format(master_response))
+        masterResponse = self.masterStub.ReadFile(request).st
+        print("Response from master: {}".format(masterResponse))
 
-    data = master_response.split("|")
-    chunk_handle = data[0]
-    for loc in data[1:]:
-        chunkserver_addr = "localhost:{}".format(loc)
-        with grpc.insecure_channel(chunkserver_addr) as channel:
-            stub = gfs_pb2_grpc.ChunkServerToClientStub(channel)
-            request = gfs_pb2.String(st=chunk_handle)
-            cs_response = stub.Create(request).st
-            print("Response from chunkserver {} : {}".format(loc, cs_response))
-
-    append_file(file_path, inp2)
-    return 0
-
-def read_file(file_path, offset, numbytes):
-    master_addr = "localhost:{}".format(cfg.master_loc)
-    with grpc.insecure_channel(master_addr) as channel:
-        stub = gfs_pb2_grpc.MasterServerToClientStub(channel)
-        st = file_path + "|" + str(offset) + "|" + str(numbytes)
-        request = gfs_pb2.String(st=st)
-        master_response = stub.ReadFile(request).st
-        print("Response from master: {}".format(master_response))
-
-    if master_response.startswith("ERROR"):
-        return -1
-
-    file_content = ""
-    data = master_response.split("|")
-    for chunk_info in data:
-        chunk_handle, loc, start_offset, numbytes = chunk_info.split("*")
-        chunkserver_addr = "localhost:{}".format(loc)
-        with grpc.insecure_channel(chunkserver_addr) as channel:
-            stub = gfs_pb2_grpc.ChunkServerToClientStub(channel)
-            st = chunk_handle + "|" + start_offset + "|" + numbytes
-            request = gfs_pb2.String(st=st)
-            cs_response = stub.Read(request).st
-            print("Response from chunkserver {} : {}".format(loc, cs_response))
-
-        if cs_response.startswith("ERROR"):
+        if masterResponse.startswith("ERROR"):
             return -1
-        file_content += cs_response
 
-    print(file_content)
+        file_content = ""
+        data = masterResponse.split("|")
+        for chunk_info in data:
+            chunkHandle, loc, start_offset, numbytes = chunk_info.split("*")
+            csAddress = "localhost:{}".format(loc)
+            channel = grpc.insecure_channel(csAddress)
+            stub = gfs_pb2_grpc.ChunkServerStub(channel)
+            st = chunkHandle + "|" + start_offset + "|" + numbytes
+            request = gfs_pb2.String(st=st)
+            response = stub.Read(request).st
+            print("Response from chunkserver {} : {}".format(loc, response))
 
-def delete_file(file_path):
-    master_addr = "localhost:{}".format(cfg.master_loc)
-    with grpc.insecure_channel(master_addr) as channel:
-        stub = gfs_pb2_grpc.MasterServerToClientStub(channel)
-        request = gfs_pb2.String(st=file_path)
-        master_response = stub.DeleteFile(request).st
-        print("Response from master: {}".format(master_response))
+            if response.startswith("ERROR"):
+                return -1
+            file_content += response
 
-def undelete_file(file_path):
-    master_addr = "localhost:{}".format(cfg.master_loc)
-    with grpc.insecure_channel(master_addr) as channel:
-        stub = gfs_pb2_grpc.MasterServerToClientStub(channel)
-        request = gfs_pb2.String(st=file_path)
-        master_response = stub.UndeleteFile(request).st
-        print("Response from master: {}".format(master_response))
+        print(file_content)
+
+    def deleteFile(self,filePath):
+        request = gfs_pb2.String(st=filePath)
+        masterResponse = self.masterStub.DeleteFile(request).st
+        print("Response from master: {}".format(masterResponse))
+
+    def undeleteFile(self,filePath):
+        request = gfs_pb2.String(st=filePath)
+        masterResponse = self.masterStub.UndeleteFile(request).st
+        print("Response from master: {}".format(masterResponse))
 
 
-def run(command, file_path, args):
-        if command == "create":
-            create_file(file_path)
-        elif command == "list":
-            list_files(file_path)
-        elif command == "append":
-            if len(args) == 0:
-                print("No input data given to append")
+def run(cmd, client):
+    cmd = cmd.split()
+
+    if(len(cmd) == 1):
+        if(cmd[0] == "exit"):
+            sys.exit()
+        else:
+            print("[ERROR]: Invalid Command")
+    else:
+        filePath = cmd[1]
+        if(cmd[0] == "create"):
+            client.createFile(filePath)
+        elif(cmd[0] == "list"):
+            client.listFile(filePath)
+        elif(cmd[0] == "append"):
+            if(len(cmd) == 2):
+                print("[ERROR]: No input data given to append")
             else:
-                append_file(file_path, args[0])
-        elif command == "read":
-            if len(args) < 2 or not isint(args[0]) or not isint(args[1]):
-                print("Should be given byte offset and number of bytes to read")
+                client.appendFile(filePath, cmd[2])
+        elif(cmd[0] == "read"):
+            if(len(cmd) <= 3 or not isint(cmd[2]) or not isint(cmd[3])):
+                print("[ERROR]: Read command usage: read <filePath> <offset> <len>")
             else:
-                read_file(file_path, int(args[0]), int(args[1]))
-        elif command == "delete":
-            delete_file(file_path)
-        elif command == "undelete":
-            undelete_file(file_path)
+                client.readFile(filePath, int(cmd[2]), int(cmd[3]))
+        elif(cmd[0] == "delete"):
+            client.deleteFile(filePath)
+        elif(cmd[0] == "undelete"):
+            client.undeleteFile(filePath)
         else:
             print("Invalid Command")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python {} <command> <file_path> <args>".format(sys.argv[0]))
-        exit(-1)
 
-    run(sys.argv[1], sys.argv[2], sys.argv[3:])
+    client = Client()
+    print('Enter command')
+
+    while(True):
+        cmd = input()
+
+        if(len(cmd)):
+           run(cmd, client)

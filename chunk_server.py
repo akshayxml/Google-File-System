@@ -58,7 +58,7 @@ class ChunkServer(object):
             return Status(0, ret)
 
 
-class ChunkServerToClientServicer(gfs_pb2_grpc.ChunkServerToClientServicer):
+class ChunkServerServicer(gfs_pb2_grpc.ChunkServerServicer):
     def __init__(self, ckser):
         self.ckser = ckser
         self.port = self.ckser.port
@@ -92,10 +92,12 @@ class ChunkServerToClientServicer(gfs_pb2_grpc.ChunkServerToClientServicer):
 
 def start(port):
     print("Starting Chunk server on {}".format(port))
+    if not os.path.exists(os.path.join(cfg.chunkserver_root, port)):
+        os.makedirs(os.path.join(cfg.chunkserver_root, port))
     ckser = ChunkServer(port=port, root=os.path.join(cfg.chunkserver_root, port))
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=3))
-    gfs_pb2_grpc.add_ChunkServerToClientServicer_to_server(ChunkServerToClientServicer(ckser), server)
+    gfs_pb2_grpc.add_ChunkServerServicer_to_server(ChunkServerServicer(ckser), server)
     server.add_insecure_port("[::]:{}".format(port))
     server.start()
     try:
@@ -110,6 +112,7 @@ if __name__ == "__main__":
     # p = Pool(len(cfg.chunkserver_locs))
     # ret = p.map(start, cfg.chunkserver_locs)
     # print(ret)
+    
     for loc in cfg.chunkserver_locs:
         p = Process(target=start, args=(loc,))
         p.start()

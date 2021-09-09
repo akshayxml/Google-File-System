@@ -5,7 +5,7 @@ import grpc
 import gfs_pb2 as gfs__pb2
 
 
-class MasterServerToClientStub(object):
+class MasterStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,43 +15,43 @@ class MasterServerToClientStub(object):
             channel: A grpc.Channel.
         """
         self.ListFiles = channel.unary_unary(
-                '/gfs.MasterServerToClient/ListFiles',
+                '/gfs.Master/ListFiles',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
         self.CreateFile = channel.unary_unary(
-                '/gfs.MasterServerToClient/CreateFile',
+                '/gfs.Master/CreateFile',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
         self.AppendFile = channel.unary_unary(
-                '/gfs.MasterServerToClient/AppendFile',
+                '/gfs.Master/AppendFile',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
         self.CreateChunk = channel.unary_unary(
-                '/gfs.MasterServerToClient/CreateChunk',
+                '/gfs.Master/CreateChunk',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
         self.ReadFile = channel.unary_unary(
-                '/gfs.MasterServerToClient/ReadFile',
+                '/gfs.Master/ReadFile',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
         self.DeleteFile = channel.unary_unary(
-                '/gfs.MasterServerToClient/DeleteFile',
+                '/gfs.Master/DeleteFile',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
         self.UndeleteFile = channel.unary_unary(
-                '/gfs.MasterServerToClient/UndeleteFile',
+                '/gfs.Master/UndeleteFile',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
 
 
-class MasterServerToClientServicer(object):
+class MasterServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def ListFiles(self, request, context):
@@ -97,7 +97,7 @@ class MasterServerToClientServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_MasterServerToClientServicer_to_server(servicer, server):
+def add_MasterServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'ListFiles': grpc.unary_unary_rpc_method_handler(
                     servicer.ListFiles,
@@ -136,12 +136,12 @@ def add_MasterServerToClientServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'gfs.MasterServerToClient', rpc_method_handlers)
+            'gfs.Master', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class MasterServerToClient(object):
+class Master(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -155,7 +155,7 @@ class MasterServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.MasterServerToClient/ListFiles',
+        return grpc.experimental.unary_unary(request, target, '/gfs.Master/ListFiles',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,
@@ -172,7 +172,7 @@ class MasterServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.MasterServerToClient/CreateFile',
+        return grpc.experimental.unary_unary(request, target, '/gfs.Master/CreateFile',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,
@@ -189,7 +189,7 @@ class MasterServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.MasterServerToClient/AppendFile',
+        return grpc.experimental.unary_unary(request, target, '/gfs.Master/AppendFile',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,
@@ -206,7 +206,7 @@ class MasterServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.MasterServerToClient/CreateChunk',
+        return grpc.experimental.unary_unary(request, target, '/gfs.Master/CreateChunk',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,
@@ -223,7 +223,7 @@ class MasterServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.MasterServerToClient/ReadFile',
+        return grpc.experimental.unary_unary(request, target, '/gfs.Master/ReadFile',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,
@@ -240,7 +240,7 @@ class MasterServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.MasterServerToClient/DeleteFile',
+        return grpc.experimental.unary_unary(request, target, '/gfs.Master/DeleteFile',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,
@@ -257,14 +257,14 @@ class MasterServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.MasterServerToClient/UndeleteFile',
+        return grpc.experimental.unary_unary(request, target, '/gfs.Master/UndeleteFile',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
 
-class ChunkServerToClientStub(object):
+class ChunkServerStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -274,28 +274,28 @@ class ChunkServerToClientStub(object):
             channel: A grpc.Channel.
         """
         self.Create = channel.unary_unary(
-                '/gfs.ChunkServerToClient/Create',
+                '/gfs.ChunkServer/Create',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
         self.GetChunkSpace = channel.unary_unary(
-                '/gfs.ChunkServerToClient/GetChunkSpace',
+                '/gfs.ChunkServer/GetChunkSpace',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
         self.Append = channel.unary_unary(
-                '/gfs.ChunkServerToClient/Append',
+                '/gfs.ChunkServer/Append',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
         self.Read = channel.unary_unary(
-                '/gfs.ChunkServerToClient/Read',
+                '/gfs.ChunkServer/Read',
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
 
 
-class ChunkServerToClientServicer(object):
+class ChunkServerServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Create(self, request, context):
@@ -323,7 +323,7 @@ class ChunkServerToClientServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_ChunkServerToClientServicer_to_server(servicer, server):
+def add_ChunkServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Create': grpc.unary_unary_rpc_method_handler(
                     servicer.Create,
@@ -347,12 +347,12 @@ def add_ChunkServerToClientServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'gfs.ChunkServerToClient', rpc_method_handlers)
+            'gfs.ChunkServer', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class ChunkServerToClient(object):
+class ChunkServer(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -366,7 +366,7 @@ class ChunkServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.ChunkServerToClient/Create',
+        return grpc.experimental.unary_unary(request, target, '/gfs.ChunkServer/Create',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,
@@ -383,7 +383,7 @@ class ChunkServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.ChunkServerToClient/GetChunkSpace',
+        return grpc.experimental.unary_unary(request, target, '/gfs.ChunkServer/GetChunkSpace',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,
@@ -400,7 +400,7 @@ class ChunkServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.ChunkServerToClient/Append',
+        return grpc.experimental.unary_unary(request, target, '/gfs.ChunkServer/Append',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,
@@ -417,7 +417,7 @@ class ChunkServerToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.ChunkServerToClient/Read',
+        return grpc.experimental.unary_unary(request, target, '/gfs.ChunkServer/Read',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,

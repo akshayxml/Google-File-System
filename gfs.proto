@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package gfs;
 
-service MasterServerToClient {
+service Master {
     rpc ListFiles(String) returns (String) {}
     rpc CreateFile(String) returns (String) {}
     rpc AppendFile(String) returns (String) {}
@@ -12,7 +12,7 @@ service MasterServerToClient {
     rpc UndeleteFile(String) returns (String) {}
 }
 
-service ChunkServerToClient {
+service ChunkServer{
     rpc Create(String) returns (String) {}
     rpc GetChunkSpace(String) returns (String) {}
     rpc Append(String) returns (String) {}

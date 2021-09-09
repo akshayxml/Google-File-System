@@ -1,6 +1,8 @@
 # Google-File-System
 A python implementation of Google File System
 
+python -m grpc_tools.protoc -I../../protos --python_out=. --grpc_python_out=. ../../protos/route_guide.proto
+
 ## Compile
 - Run `bash recompile.sh`
 

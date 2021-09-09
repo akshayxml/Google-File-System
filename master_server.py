@@ -207,7 +207,7 @@ class MasterServer(object):
             return Status(0, "SUCCESS: file {} is restored".format(file_path))
 
 
-class MasterServerToClientServicer(gfs_pb2_grpc.MasterServerToClientServicer):
+class MasterServicer(gfs_pb2_grpc.MasterServicer):
     def __init__(self, master):
         self.master = master
 
@@ -270,9 +270,10 @@ def serve():
     master = MasterServer()
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=3))
-    gfs_pb2_grpc.add_MasterServerToClientServicer_to_server(MasterServerToClientServicer(master=master), server)
-    server.add_insecure_port('[::]:50051')
+    gfs_pb2_grpc.add_MasterServicer_to_server(MasterServicer(master=master), server)
+    server.add_insecure_port('[::]:'+cfg.master_loc)
     server.start()
+    print('Master serving at '+cfg.master_loc)
     try:
         while True:
             time.sleep(2000)
