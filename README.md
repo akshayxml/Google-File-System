@@ -1,8 +1,9 @@
 # Google-File-System
 A python implementation of Google File System
 
-python -m grpc_tools.protoc -I../../protos --python_out=. --grpc_python_out=. ../../protos/route_guide.proto
+python -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. ./gfs.proto
 
+# NEXT - implement delete
 ## Compile
 - Run `bash recompile.sh`
 
@@ -44,6 +45,5 @@ python client.py append /file1 abcdefghijklm
 python client.py read /file1 2 6
 python client.py delete /file1
 python client.py list /
-python client.py undelete /file1
 python client.py list /
 ```

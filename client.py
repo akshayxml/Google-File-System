@@ -1,17 +1,13 @@
 import os
 import sys
-
 import grpc
-import gfs_pb2_grpc
 import gfs_pb2
-
+import gfs_pb2_grpc
 from common import Config as cfg
-from common import isint
 
 class Client():
-
     def __init__(self):
-        masterChannel = grpc.insecure_channel("127.0.0.1:"+str(cfg.master_loc))
+        masterChannel = grpc.insecure_channel("127.0.0.1:"+str(cfg.masterLoc))
         self.masterStub = gfs_pb2_grpc.MasterStub(masterChannel)
 
     def createFile(self,filePath):
@@ -25,7 +21,7 @@ class Client():
         data = masterResponse.split("|")
         chunkHandle = data[0]
         for loc in data[1:]:
-            csAddress = "localhost:{}".format(loc)
+            csAddress = "127.0.0.1:{}".format(loc)
             channel = grpc.insecure_channel(csAddress)
             stub = gfs_pb2_grpc.ChunkServerStub(channel)
             request = gfs_pb2.String(st=chunkHandle)
@@ -38,7 +34,7 @@ class Client():
         files = masterResponse.split("|")
         print(files)
 
-    def appendFile(self,filePath, inputData):
+    def appendFile(self, filePath, inputData):
         request = gfs_pb2.String(st=filePath)
         masterResponse = self.masterStub.AppendFile(request).st
         print("Response from master: {}".format(masterResponse))
@@ -48,37 +44,25 @@ class Client():
 
         inputSize = len(inputData)
         data = masterResponse.split("|")
-        chunkHandle = data[0]
+        spaceLeft = int(data[0])
+        chunkHandle = data[1]
 
-        for loc in data[1:]:
-            csAddress = "localhost:{}".format(loc)
+        curInput = inputData
+        if spaceLeft < inputSize:
+            curInput, remInput = inputData[:spaceLeft], inputData[spaceLeft:]
+
+        for loc in data[2:]:
+            csAddress = "127.0.0.1:{}".format(loc)
             channel = grpc.insecure_channel(csAddress)
             stub = gfs_pb2_grpc.ChunkServerStub(channel)
-            request = gfs_pb2.String(st=chunkHandle)
-            response = stub.GetChunkSpace(request).st
+            st = chunkHandle + "|" + curInput
+            request = gfs_pb2.String(st=st)
+            response = stub.Append(request).st
             print("Response from chunkserver {} : {}".format(loc, response))
-
-            if response.startswith("ERROR"):
-                return -1
-
-            spaceLeft = int(response)
-
-            if spaceLeft >= inputSize:
-                st = chunkHandle + "|" + inputData
-                request = gfs_pb2.String(st=st)
-                response = stub.Append(request).st
-                print("Response from chunkserver {} : {}".format(loc, response))
-            else:
-                inp1, inp2 = inputData[:spaceLeft], inputData[spaceLeft:]
-                st = chunkHandle + "|" + inp1
-                request = gfs_pb2.String(st=st)
-                response = stub.Append(request).st
-                print("Response from chunkserver {} : {}".format(loc, response))
 
         if spaceLeft >= inputSize:
             return 0
 
-        # if need to add more chunks then continue
         st = filePath + "|" + chunkHandle
         request = gfs_pb2.String(st=st)
         masterResponse = self.masterStub.CreateChunk(request).st
@@ -87,17 +71,17 @@ class Client():
         data = masterResponse.split("|")
         chunkHandle = data[0]
         for loc in data[1:]:
-            csAddress = "localhost:{}".format(loc)
+            csAddress = "127.0.0.1:{}".format(loc)
             channel = grpc.insecure_channel(csAddress)
             stub = gfs_pb2_grpc.ChunkServerStub(channel)
             request = gfs_pb2.String(st=chunkHandle)
             response = stub.Create(request).st
             print("Response from chunkserver {} : {}".format(loc, response))
 
-        self.appendFile(filePath, inp2)
-        return 0
+        #recursive call to append remaining input
+        return self.appendFile(filePath, remInput)
 
-    def readFile(self,filePath, offset, numbytes):
+    def readFile(self, filePath, offset, numbytes):
         st = filePath + "|" + str(offset) + "|" + str(numbytes)
         request = gfs_pb2.String(st=st)
         masterResponse = self.masterStub.ReadFile(request).st
@@ -106,32 +90,27 @@ class Client():
         if masterResponse.startswith("ERROR"):
             return -1
 
-        file_content = ""
+        fileContent = ""
         data = masterResponse.split("|")
-        for chunk_info in data:
-            chunkHandle, loc, start_offset, numbytes = chunk_info.split("*")
-            csAddress = "localhost:{}".format(loc)
+        for chunkInfo in data:
+            chunkHandle, loc, offset, numbytes = chunkInfo.split("*")
+            csAddress = "127.0.0.1:{}".format(loc)
             channel = grpc.insecure_channel(csAddress)
             stub = gfs_pb2_grpc.ChunkServerStub(channel)
-            st = chunkHandle + "|" + start_offset + "|" + numbytes
+            st = chunkHandle + "|" + offset + "|" + numbytes
             request = gfs_pb2.String(st=st)
             response = stub.Read(request).st
             print("Response from chunkserver {} : {}".format(loc, response))
 
             if response.startswith("ERROR"):
                 return -1
-            file_content += response
+            fileContent += response
 
-        print(file_content)
+        print(fileContent)
 
     def deleteFile(self,filePath):
         request = gfs_pb2.String(st=filePath)
         masterResponse = self.masterStub.DeleteFile(request).st
-        print("Response from master: {}".format(masterResponse))
-
-    def undeleteFile(self,filePath):
-        request = gfs_pb2.String(st=filePath)
-        masterResponse = self.masterStub.UndeleteFile(request).st
         print("Response from master: {}".format(masterResponse))
 
 
@@ -155,14 +134,19 @@ def run(cmd, client):
             else:
                 client.appendFile(filePath, cmd[2])
         elif(cmd[0] == "read"):
-            if(len(cmd) <= 3 or not isint(cmd[2]) or not isint(cmd[3])):
+            if(len(cmd) <= 3 or not cmd[2].isdigit() or not cmd[3].isdigit()):
                 print("[ERROR]: Read command usage: read <filePath> <offset> <len>")
             else:
                 client.readFile(filePath, int(cmd[2]), int(cmd[3]))
         elif(cmd[0] == "delete"):
-            client.deleteFile(filePath)
-        elif(cmd[0] == "undelete"):
-            client.undeleteFile(filePath)
+            while(True):
+                print("Are you sure you want to delete this file - {}? (Y/N)".format(cmd[1]))
+                confirm = input()
+                if(confirm.lower() == 'n'):
+                    return
+                elif(confirm.lower() == 'y'):
+                    client.deleteFile(filePath)
+                    return
         else:
             print("Invalid Command")
 

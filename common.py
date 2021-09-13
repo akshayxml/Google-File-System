@@ -1,10 +1,8 @@
-
-
 class Config(object):
     chunk_size = 4
-    master_loc = "50051"
-    chunkserver_locs = ["50052", "50053", "50054", "50055", "50056"]
-    chunkserver_root = "root_chunkserver"
+    masterLoc = "50051"
+    chunkserverLocs = ["50052", "50053", "50054", "50055", "50056"]
+    rootDir = "root"
 
 
 class Status(object):
@@ -13,11 +11,3 @@ class Status(object):
         self.e = e
         if self.e:
             print(self.e)
-
-def isint(e):
-    try:
-        e = int(e)
-    except:
-        return False
-    else:
-        return True

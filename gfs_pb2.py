@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\tgfs.proto\x12\x03gfs\"\x14\n\x06String\x12\n\n\x02st\x18\x01 \x01(\t\"\x07\n\x05\x45mpty2\xae\x02\n\x06Master\x12\'\n\tListFiles\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nCreateFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nAppendFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12)\n\x0b\x43reateChunk\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12&\n\x08ReadFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nDeleteFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12*\n\x0cUndeleteFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x32\xaa\x01\n\x0b\x43hunkServer\x12$\n\x06\x43reate\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12+\n\rGetChunkSpace\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12$\n\x06\x41ppend\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12\"\n\x04Read\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\tgfs.proto\x12\x03gfs\"\x14\n\x06String\x12\n\n\x02st\x18\x01 \x01(\t\"\x07\n\x05\x45mpty2\x82\x02\n\x06Master\x12\'\n\tListFiles\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nCreateFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nAppendFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12)\n\x0b\x43reateChunk\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12&\n\x08ReadFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nDeleteFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x32\xaa\x01\n\x0b\x43hunkServer\x12$\n\x06\x43reate\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12+\n\rGetChunkSpace\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12$\n\x06\x41ppend\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12\"\n\x04Read\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x62\x06proto3'
 )
 
 
@@ -109,7 +109,7 @@ _MASTER = _descriptor.ServiceDescriptor(
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
   serialized_start=50,
-  serialized_end=352,
+  serialized_end=308,
   methods=[
   _descriptor.MethodDescriptor(
     name='ListFiles',
@@ -171,16 +171,6 @@ _MASTER = _descriptor.ServiceDescriptor(
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),
-  _descriptor.MethodDescriptor(
-    name='UndeleteFile',
-    full_name='gfs.Master.UndeleteFile',
-    index=6,
-    containing_service=None,
-    input_type=_STRING,
-    output_type=_STRING,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
 ])
 _sym_db.RegisterServiceDescriptor(_MASTER)
 
@@ -194,8 +184,8 @@ _CHUNKSERVER = _descriptor.ServiceDescriptor(
   index=1,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=355,
-  serialized_end=525,
+  serialized_start=311,
+  serialized_end=481,
   methods=[
   _descriptor.MethodDescriptor(
     name='Create',

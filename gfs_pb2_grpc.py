@@ -44,11 +44,6 @@ class MasterStub(object):
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
-        self.UndeleteFile = channel.unary_unary(
-                '/gfs.Master/UndeleteFile',
-                request_serializer=gfs__pb2.String.SerializeToString,
-                response_deserializer=gfs__pb2.String.FromString,
-                )
 
 
 class MasterServicer(object):
@@ -90,12 +85,6 @@ class MasterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def UndeleteFile(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_MasterServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -126,11 +115,6 @@ def add_MasterServicer_to_server(servicer, server):
             ),
             'DeleteFile': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteFile,
-                    request_deserializer=gfs__pb2.String.FromString,
-                    response_serializer=gfs__pb2.String.SerializeToString,
-            ),
-            'UndeleteFile': grpc.unary_unary_rpc_method_handler(
-                    servicer.UndeleteFile,
                     request_deserializer=gfs__pb2.String.FromString,
                     response_serializer=gfs__pb2.String.SerializeToString,
             ),
@@ -241,23 +225,6 @@ class Master(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/gfs.Master/DeleteFile',
-            gfs__pb2.String.SerializeToString,
-            gfs__pb2.String.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def UndeleteFile(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.Master/UndeleteFile',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,

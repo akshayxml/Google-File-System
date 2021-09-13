@@ -11,7 +11,6 @@ import gfs_pb2
 from common import Config as cfg
 from common import Status
 
-
 class ChunkServer(object):
     def __init__(self, port, root):
         self.port = port
@@ -26,15 +25,6 @@ class ChunkServer(object):
             return Status(-1, "ERROR :" + str(e))
         else:
             return Status(0, "SUCCESS: chunk created")
-
-    def get_chunk_space(self, chunk_handle):
-        try:
-            chunk_space = cfg.chunk_size - os.stat(os.path.join(self.root, chunk_handle)).st_size
-            chunk_space = str(chunk_space)
-        except Exception as e:
-            return None, Status(-1, "ERROR: " + str(e))
-        else:
-            return chunk_space, Status(0, "")
 
     def append(self, chunk_handle, data):
         try:
@@ -69,15 +59,6 @@ class ChunkServerServicer(gfs_pb2_grpc.ChunkServerServicer):
         status = self.ckser.create(chunk_handle)
         return gfs_pb2.String(st=status.e)
 
-    def GetChunkSpace(self, request, context):
-        chunk_handle = request.st
-        print("{} GetChunkSpace {}".format(self.port, chunk_handle))
-        chunk_space, status = self.ckser.get_chunk_space(chunk_handle)
-        if status.v != 0:
-            return gfs_pb2.String(st=status.e)
-        else:
-            return gfs_pb2.String(st=chunk_space)
-
     def Append(self, request, context):
         chunk_handle, data = request.st.split("|")
         print("{} Append {} {}".format(self.port, chunk_handle, data))
@@ -92,9 +73,9 @@ class ChunkServerServicer(gfs_pb2_grpc.ChunkServerServicer):
 
 def start(port):
     print("Starting Chunk server on {}".format(port))
-    if not os.path.exists(os.path.join(cfg.chunkserver_root, port)):
-        os.makedirs(os.path.join(cfg.chunkserver_root, port))
-    ckser = ChunkServer(port=port, root=os.path.join(cfg.chunkserver_root, port))
+    if not os.path.exists(os.path.join(cfg.rootDir, port)):
+        os.makedirs(os.path.join(cfg.rootDir, port))
+    ckser = ChunkServer(port=port, root=os.path.join(cfg.rootDir, port))
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=3))
     gfs_pb2_grpc.add_ChunkServerServicer_to_server(ChunkServerServicer(ckser), server)
@@ -109,11 +90,8 @@ def start(port):
 
 if __name__ == "__main__":
 
-    # p = Pool(len(cfg.chunkserver_locs))
-    # ret = p.map(start, cfg.chunkserver_locs)
-    # print(ret)
     
-    for loc in cfg.chunkserver_locs:
+    for loc in cfg.chunkserverLocs:
         p = Process(target=start, args=(loc,))
         p.start()
     p.join()
