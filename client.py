@@ -148,7 +148,7 @@ def run(cmd, client):
                     client.deleteFile(filePath)
                     return
         else:
-            print("Invalid Command")
+            print("[ERROR]: Invalid Command")
 
 if __name__ == "__main__":
 

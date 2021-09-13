@@ -7,18 +7,17 @@ import gfs_pb2
 import gfs_pb2_grpc
 from common import Status
 from concurrent import futures
-from common import Config as cfg
+from common import Config
 from collections import OrderedDict
-
 
 class loadBalancer():
     def __init__(self):
-        self.locs = cfg.chunkserverLocs
+        self.locs = Config.chunkserverLocs
         self.csLoad = {}
         for cs in self.locs:
             self.csLoad[cs] = 0
         
-    def getCs(self):
+    def getLocs(self):
         locs = []
         for loc in sorted(self.csLoad.items(), key=lambda x: x[1]):
             self.csLoad[loc[0]] += 1
@@ -39,134 +38,82 @@ class File(object):
         self.filePath = filePath
         self.chunks = OrderedDict()
 
-class MetaData(object):
+class MasterServer(object):
     def __init__(self):
-        self.locs = cfg.chunkserverLocs
-        self.loadBalancer = loadBalancer()
         self.files = {}
-        self.ch2fp = {}
-        self.to_delete = set()
+        self.locs = Config.chunkserverLocs
+        self.loadBalancer = loadBalancer()
 
     def getLatestChunk(self, filePath):
         latestChunkHandle = list(self.files[filePath].chunks.keys())[-1]
         return latestChunkHandle
 
-    def getChunkLocs(self, chunkHandle):
-        filePath = self.ch2fp[chunkHandle]
+    def getChunkLocs(self, chunkHandle, filePath):
         return self.files[filePath].chunks[chunkHandle].locs
 
-    def create_new_file(self, filePath, chunkHandle):
+    def getChunkHandle(self):
+        return str(uuid.uuid1())
+
+    def listFiles(self, filePath):
+        fileList = []
+        for fp in self.files.keys():
+            if fp.startswith(filePath):
+                fileList.append(fp)
+        return fileList
+
+    def createFile(self, filePath):
         if filePath in self.files:
             return Status(-1, "ERROR: File exists already: {}".format(filePath))
-        fl = File(filePath)
-        self.files[filePath] = fl
-        status = self.create_new_chunk(filePath, -1, chunkHandle)
-        return status
 
-    def create_new_chunk(self, filePath, prevChunkHandle, chunkHandle):
+        self.files[filePath] = File(filePath)
+        return self.createChunk(filePath, -1)
+
+    def appendFile(self, filePath):
+        if filePath not in self.files:
+            return None, None, Status(-1, "ERROR: file {} doesn't exist".format(filePath))
+
+        latestChunkHandle = self.getLatestChunk(filePath)
+        locs = self.getChunkLocs(latestChunkHandle, filePath)
+        status = Status(0, "Success")
+        return latestChunkHandle, locs, status
+    
+    def createChunk(self, filePath, prevChunkHandle):
         if filePath not in self.files:
             return Status(-2, "ERROR: New chunk file doesn't exist: {}".format(filePath))
 
-        latest_chunk = None
+        latestChunk = None
         if prevChunkHandle != -1:
-            latest_chunk = self.getLatestChunk(filePath)
+            latestChunk = self.getLatestChunk(filePath)
 
-        # already created
-        if prevChunkHandle != -1 and latest_chunk != prevChunkHandle:
+        if prevChunkHandle != -1 and latestChunk != prevChunkHandle:
             return Status(-3, "ERROR: New chunk already created: {} : {}".format(filePath, chunkHandle))
 
-        chunk = Chunk()
-        self.files[filePath].chunks[chunkHandle] = chunk
-        locs = self.loadBalancer.getCs()
+        chunkHandle = self.getChunkHandle()
+        self.files[filePath].chunks[chunkHandle] = Chunk()
 
+        locs = self.loadBalancer.getLocs()
         for loc in locs:
             self.files[filePath].chunks[chunkHandle].locs.append(loc)
 
-        self.ch2fp[chunkHandle] = filePath
-        return Status(0, "New Chunk Created")
-
-    def deleteFile(self, filePath):
-        chunksToDel = []
-
-        for handle, chunk in self.files[filePath].chunks.items():
-            for loc in chunk.locs:
-                self.loadBalancer.decreaseLoad(loc)
-                os.remove(os.path.join(cfg.rootDir, os.path.join(loc, handle)))
-            chunksToDel.append(chunk)
-
-        for chunk in chunksToDel:
-            del chunk
-        del self.files[filePath]
-
-class MasterServer(object):
-    def __init__(self):
-        self.file_list = ["/file1", "/file2", "/dir1/file3"]
-        self.meta = MetaData()
-
-    def get_chunkHandle(self):
-        return str(uuid.uuid1())
-
-    def get_available_chunkserver(self):
-        return random.choice(self.chunkservers)
-
-    def check_valid_file(self, filePath):
-        if filePath not in self.meta.files:
-            return Status(-1, "ERROR: file {} doesn't exist".format(filePath))
-        else:
-            return Status(0, "SUCCESS: file {} exists and not yet deleted".format(filePath))
-
-    def list_files(self, filePath):
-        file_list = []
-        for fp in self.meta.files.keys():
-            if fp.startswith(filePath):
-                file_list.append(fp)
-        return file_list
-
-    def createFile(self, filePath):
-        chunkHandle = self.get_chunkHandle()
-        status = self.meta.create_new_file(filePath, chunkHandle)
-
-        if status.v != 0:
-            return None, None, status
-
-        locs = self.meta.files[filePath].chunks[chunkHandle].locs
-        return chunkHandle, locs, status
-
-    def appendFile(self, filePath):
-        status = self.check_valid_file(filePath)
-        if status.v != 0:
-            return None, None, status
-
-        latestChunkHandle = self.meta.getLatestChunk(filePath)
-        locs = self.meta.getChunkLocs(latestChunkHandle)
-        status = Status(0, "Append handled")
-        return latestChunkHandle, locs, status
-
-    def createChunk(self, filePath, prevChunkHandle):
-        chunkHandle = self.get_chunkHandle()
-        status = self.meta.create_new_chunk(filePath, prevChunkHandle, chunkHandle)
-        # TODO: check status
-        locs = self.meta.files[filePath].chunks[chunkHandle].locs
-        return chunkHandle, locs, status
+        return chunkHandle, locs, Status(0, "New Chunk Created")
     
     def getChunkSpace(self, filePath):
         try:
-            latestChunkHandle = self.meta.getLatestChunk(filePath)
-            path = os.path.join(cfg.rootDir, self.meta.files[filePath].chunks[latestChunkHandle].locs[0])
-            chunkSpace = cfg.chunk_size - os.stat(os.path.join(path, latestChunkHandle)).st_size
+            latestChunkHandle = self.getLatestChunk(filePath)
+            path = os.path.join(Config.rootDir, self.files[filePath].chunks[latestChunkHandle].locs[0])
+            chunkSpace = Config.chunk_size - os.stat(os.path.join(path, latestChunkHandle)).st_size
         except Exception as e:
             return None, Status(-1, "ERROR: " + str(e))
         else:
             return str(chunkSpace), Status(0, "")
 
     def read_file(self, filePath, offset, numbytes):
-        status = self.check_valid_file(filePath)
-        if status.v != 0:
-            return status
+        if filePath not in self.files:
+            return Status(-1, "ERROR: file {} doesn't exist".format(filePath))
 
-        chunk_size = cfg.chunk_size
+        chunk_size = Config.chunk_size
         start_chunk = offset // chunk_size
-        all_chunks = list(self.meta.files[filePath].chunks.keys())
+        all_chunks = list(self.files[filePath].chunks.keys())
         if start_chunk > len(all_chunks):
             return Status(-1, "ERROR: Offset is too large")
 
@@ -191,22 +138,27 @@ class MasterServer(object):
                 enof = end_offset
             else:
                 enof = chunk_size - 1
-            loc = self.meta.files[filePath].chunks[chunkHandle].locs[0]
+            loc = self.files[filePath].chunks[chunkHandle].locs[0]
             ret.append(chunkHandle + "*" + loc + "*" + str(stof) + "*" + str(enof - stof + 1))
         ret = "|".join(ret)
         return Status(0, ret)
 
     def deleteFile(self, filePath):
-        status = self.check_valid_file(filePath)
-        if status.v != 0:
-            return status
+        if filePath not in self.files:
+            return Status(-1, "ERROR: file {} doesn't exist".format(filePath))
 
-        try:
-            self.meta.deleteFile(filePath)
-        except Exception as e:
-            return Status(-1, "ERROR: " + str(e))
-        else:
-            return Status(0, "SUCCESS: file {} is deleted".format(filePath))
+        chunksToDel = []
+        for handle, chunk in self.files[filePath].chunks.items():
+            for loc in chunk.locs:
+                self.loadBalancer.decreaseLoad(loc)
+                os.remove(os.path.join(Config.rootDir, os.path.join(loc, handle)))
+            chunksToDel.append(chunk)
+
+        for chunk in chunksToDel:
+            del chunk
+        del self.files[filePath]
+
+        return Status(0, "SUCCESS: file {} is deleted".format(filePath))
 
 class MasterServicer(gfs_pb2_grpc.MasterServicer):
     def __init__(self, master):
@@ -215,7 +167,7 @@ class MasterServicer(gfs_pb2_grpc.MasterServicer):
     def ListFiles(self, request, context):
         filePath = request.st
         print("Command List {}".format(filePath))
-        fpls = self.master.list_files(filePath)
+        fpls = self.master.listFiles(filePath)
         st = "|".join(fpls)
         return gfs_pb2.String(st=st)
 
@@ -270,9 +222,9 @@ def serve():
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=3))
     gfs_pb2_grpc.add_MasterServicer_to_server(MasterServicer(master=master), server)
-    server.add_insecure_port('[::]:'+cfg.masterLoc)
+    server.add_insecure_port('[::]:'+Config.masterLoc)
     server.start()
-    print('Master serving at '+cfg.masterLoc)
+    print('Master serving at '+Config.masterLoc)
     try:
         while True:
             time.sleep(2000)
