@@ -10,15 +10,26 @@ from concurrent import futures
 from common import Config as cfg
 from collections import OrderedDict
 
-def loadBalancer():
-    total = len(cfg.chunkserverLocs)
-    st = random.randint(0, total - 1)
-    return [
-        cfg.chunkserverLocs[st],
-        cfg.chunkserverLocs[(st+1)%total],
-        cfg.chunkserverLocs[(st+2)%total],
-    ]
 
+class loadBalancer():
+    def __init__(self):
+        self.locs = cfg.chunkserverLocs
+        self.csLoad = {}
+        for cs in self.locs:
+            self.csLoad[cs] = 0
+        
+    def getCs(self):
+        locs = []
+        for loc in sorted(self.csLoad.items(), key=lambda x: x[1]):
+            self.csLoad[loc[0]] += 1
+            locs.append(loc[0])
+            if(len(locs) == 3):
+                return locs
+        return locs
+    
+    def decreaseLoad(self, loc):
+        self.csLoad[loc] -= 1
+    
 class Chunk(object):
     def __init__(self):
         self.locs = []
@@ -27,19 +38,13 @@ class File(object):
     def __init__(self, filePath):
         self.filePath = filePath
         self.chunks = OrderedDict()
-        self.delete = False
 
 class MetaData(object):
     def __init__(self):
         self.locs = cfg.chunkserverLocs
-
+        self.loadBalancer = loadBalancer()
         self.files = {}
         self.ch2fp = {}
-        self.locsDict = {}
-
-        for cs in self.locs:
-            self.locsDict[cs] = []
-
         self.to_delete = set()
 
     def getLatestChunk(self, filePath):
@@ -72,23 +77,20 @@ class MetaData(object):
 
         chunk = Chunk()
         self.files[filePath].chunks[chunkHandle] = chunk
-        locs = loadBalancer()
+        locs = self.loadBalancer.getCs()
+
         for loc in locs:
-            self.locsDict[loc].append(chunkHandle)
             self.files[filePath].chunks[chunkHandle].locs.append(loc)
 
         self.ch2fp[chunkHandle] = filePath
         return Status(0, "New Chunk Created")
-
-    def mark_delete(self, filePath):
-        self.files[filePath].delete = True
-        self.to_delete.add(filePath)
 
     def deleteFile(self, filePath):
         chunksToDel = []
 
         for handle, chunk in self.files[filePath].chunks.items():
             for loc in chunk.locs:
+                self.loadBalancer.decreaseLoad(loc)
                 os.remove(os.path.join(cfg.rootDir, os.path.join(loc, handle)))
             chunksToDel.append(chunk)
 
@@ -110,10 +112,8 @@ class MasterServer(object):
     def check_valid_file(self, filePath):
         if filePath not in self.meta.files:
             return Status(-1, "ERROR: file {} doesn't exist".format(filePath))
-        elif self.meta.files[filePath].delete is True:
-            return Status(-1, "ERROR: file {} is already deleted".format(filePath))
         else:
-            return Status(0, "SUCCESS: file {} exists and not deleted".format(filePath))
+            return Status(0, "SUCCESS: file {} exists and not yet deleted".format(filePath))
 
     def list_files(self, filePath):
         file_list = []

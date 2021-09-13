@@ -1,15 +1,13 @@
 import os
 import sys
-from concurrent import futures
 import time
-from multiprocessing import Pool, Process
-
 import grpc
-import gfs_pb2_grpc
 import gfs_pb2
-
-from common import Config as cfg
+import gfs_pb2_grpc
 from common import Status
+from concurrent import futures
+from common import Config as cfg
+from multiprocessing import Pool, Process
 
 class ChunkServer(object):
     def __init__(self, port, root):
