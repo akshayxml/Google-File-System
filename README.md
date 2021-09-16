@@ -8,9 +8,8 @@ Python implementation of [Google File System](https://static.googleusercontent.c
 - gRPC
 
 ## Run
-- In one terminal, run `python chunkServer.py` to start chunk servers.
-- In other terminal, run `python masterServer.py` to start master server.
-- From the third terminal, run `python client.py` to and type in any of the provided commands to interact with the file system.
+- Open three terminals, and type run `chunkServer.py`, `masterServer.py` and `client.py` in each of them.
+- Type in the supported commands in the terminal which is running `client.py`.
 
 ### Commands
 - `create <file_path>` : Creates a new file with given absolute file path `<file_path>`
