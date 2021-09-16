@@ -15,5 +15,5 @@ Python implementation of [Google File System](https://static.googleusercontent.c
 - `create <file_path>` : Creates a new file with given absolute file path `<file_path>`
 - `list <prefix>` : Lists all files whose absolute path have prefix `<prefix>`
 - `append <file_path> <string>` : Appends `<string>` to file `<file_path>`
-- `pead <file_path> [offset] [len]` : Reads `[len]` characters of file `<file_path>` starting from `[offset]`. Default value of `offset` is 0 and that of `len` is EOF.
+- `read <file_path> [offset] [len]` : Reads `[len]` characters of file `<file_path>` starting from `[offset]`. Default value of `offset` is 0 and that of `len` is EOF.
 - `delete <file_path>` : delete the file with given absolute file path `<file_path>`
