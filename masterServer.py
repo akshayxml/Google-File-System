@@ -81,10 +81,8 @@ class MasterServer(object):
         if filePath not in self.files:
             return Status(-2, "ERROR: New chunk file doesn't exist: {}".format(filePath))
 
-        latestChunk = None
-        if prevChunkHandle != -1:
-            latestChunk = self.getLatestChunk(filePath)
-
+        latestChunk = None if prevChunkHandle == -1 else self.getLatestChunk(filePath)
+        
         if prevChunkHandle != -1 and latestChunk != prevChunkHandle:
             return Status(-3, "ERROR: New chunk already created: {} : {}".format(filePath, chunkHandle))
 
@@ -101,43 +99,43 @@ class MasterServer(object):
         try:
             latestChunkHandle = self.getLatestChunk(filePath)
             path = os.path.join(Config.rootDir, self.files[filePath].chunks[latestChunkHandle].locs[0])
-            chunkSpace = Config.chunk_size - os.stat(os.path.join(path, latestChunkHandle)).st_size
+            chunkSpace = Config.chunkSize - os.stat(os.path.join(path, latestChunkHandle)).st_size
         except Exception as e:
             return None, Status(-1, "ERROR: " + str(e))
         else:
             return str(chunkSpace), Status(0, "")
 
-    def read_file(self, filePath, offset, numbytes):
+    def readFile(self, filePath, offset, numbytes):
         if filePath not in self.files:
             return Status(-1, "ERROR: file {} doesn't exist".format(filePath))
 
-        chunk_size = Config.chunk_size
-        start_chunk = offset // chunk_size
-        all_chunks = list(self.files[filePath].chunks.keys())
-        if start_chunk > len(all_chunks):
+        startChunk = offset // Config.chunkSize
+        allChunks = list(self.files[filePath].chunks.keys())
+        print(allChunks)
+        if startChunk > len(allChunks):
             return Status(-1, "ERROR: Offset is too large")
 
-        start_offset = offset % chunk_size
+        startOffset = offset % Config.chunkSize
 
         if numbytes == -1:
-            end_offset = chunk_size
-            end_chunk = len(all_chunks) - 1
+            endOffset = Config.chunkSize
+            endChunk = len(allChunks) - 1
         else:
-            end_offset = offset + numbytes - 1
-            end_chunk = end_offset // chunk_size
-            end_offset = end_offset % chunk_size
+            endOffset = offset + numbytes - 1
+            endChunk = endOffset // Config.chunkSize
+            endOffset = endOffset % Config.chunkSize
 
-        all_chunkHandles = all_chunks[start_chunk:end_chunk+1]
+        allChunkHandles = allChunks[startChunk:endChunk+1]
         ret = []
-        for idx, chunkHandle in enumerate(all_chunkHandles):
+        for idx, chunkHandle in enumerate(allChunkHandles):
             if idx == 0:
-                stof = start_offset
+                stof = startOffset
             else:
                 stof = 0
-            if idx == len(all_chunkHandles) - 1:
-                enof = end_offset
+            if idx == len(allChunkHandles) - 1:
+                enof = endOffset
             else:
-                enof = chunk_size - 1
+                enof = Config.chunkSize - 1
             loc = self.files[filePath].chunks[chunkHandle].locs[0]
             ret.append(chunkHandle + "*" + loc + "*" + str(stof) + "*" + str(enof - stof + 1))
         ret = "|".join(ret)
@@ -201,14 +199,13 @@ class MasterServicer(gfs_pb2_grpc.MasterServicer):
         filePath, prevChunkHandle = request.st.split("|")
         print("Command CreateChunk {} {}".format(filePath, prevChunkHandle))
         chunkHandle, locs, status = self.master.createChunk(filePath, prevChunkHandle)
-        # TODO: check status
         st = chunkHandle + "|" + "|".join(locs)
         return gfs_pb2.String(st=st)
 
     def ReadFile(self, request, context):
         filePath, offset, numbytes = request.st.split("|")
         print("Command ReadFile {} {} {}".format(filePath, offset, numbytes))
-        status = self.master.read_file(filePath, int(offset), int(numbytes))
+        status = self.master.readFile(filePath, int(offset), int(numbytes))
         return gfs_pb2.String(st=status.e)
 
     def DeleteFile(self, request, context):

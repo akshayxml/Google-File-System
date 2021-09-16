@@ -3,7 +3,7 @@ A python implementation of Google File System
 
 python -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. ./gfs.proto
 
-# NEXT - implement delete
+# NEXT - improve read
 ## Compile
 - Run `bash recompile.sh`
 

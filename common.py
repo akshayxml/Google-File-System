@@ -1,5 +1,5 @@
 class Config(object):
-    chunk_size = 4
+    chunkSize = 4
     masterLoc = "50051"
     chunkserverLocs = ["50052", "50053", "50054", "50055", "50056"]
     rootDir = "root"

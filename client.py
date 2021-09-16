@@ -78,7 +78,6 @@ class Client():
             response = stub.Create(request).st
             print("Response from chunkserver {} : {}".format(loc, response))
 
-        #recursive call to append remaining input
         return self.appendFile(filePath, remInput)
 
     def readFile(self, filePath, offset, numbytes):
@@ -134,10 +133,13 @@ def run(cmd, client):
             else:
                 client.appendFile(filePath, cmd[2])
         elif(cmd[0] == "read"):
-            if(len(cmd) <= 3 or not cmd[2].isdigit() or not cmd[3].isdigit()):
-                print("[ERROR]: Read command usage: read <filePath> <offset> <len>")
-            else:
-                client.readFile(filePath, int(cmd[2]), int(cmd[3]))
+            offset = 0
+            length = -1
+            if(len(cmd) >= 3):
+                offset = int(cmd[2])
+            if(len(cmd) >= 4):
+                length = int(cmd[3])
+            client.readFile(filePath, offset, length)
         elif(cmd[0] == "delete"):
             while(True):
                 print("Are you sure you want to delete this file - {}? (Y/N)".format(cmd[1]))

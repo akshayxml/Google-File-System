@@ -16,29 +16,29 @@ class ChunkServer(object):
         if not os.path.isdir(root):
             os.mkdir(root)
 
-    def create(self, chunk_handle):
+    def create(self, chunkHandle):
         try:
-            open(os.path.join(self.root, chunk_handle), 'w').close()
+            open(os.path.join(self.root, chunkHandle), 'w').close()
         except Exception as e:
             return Status(-1, "ERROR :" + str(e))
         else:
             return Status(0, "SUCCESS: chunk created")
 
-    def append(self, chunk_handle, data):
+    def append(self, chunkHandle, data):
         try:
-            with open(os.path.join(self.root, chunk_handle), "a") as f:
+            with open(os.path.join(self.root, chunkHandle), "a") as f:
                 f.write(data)
         except Exception as e:
             return Status(-1, "ERROR: " + str(e))
         else:
             return Status(0, "SUCCESS: data appended")
 
-    def read(self, chunk_handle, start_offset, numbytes):
-        start_offset = int(start_offset)
+    def read(self, chunkHandle, startOffset, numbytes):
+        startOffset = int(startOffset)
         numbytes = int(numbytes)
         try:
-            with open(os.path.join(self.root, chunk_handle), "r") as f:
-                f.seek(start_offset)
+            with open(os.path.join(self.root, chunkHandle), "r") as f:
+                f.seek(startOffset)
                 ret = f.read(numbytes)
         except Exception as e:
             return  Status(-1, "ERROR: " + str(e))
@@ -52,21 +52,21 @@ class ChunkServerServicer(gfs_pb2_grpc.ChunkServerServicer):
         self.port = self.ckser.port
 
     def Create(self, request, context):
-        chunk_handle = request.st
-        print("{} CreateChunk {}".format(self.port, chunk_handle))
-        status = self.ckser.create(chunk_handle)
+        chunkHandle = request.st
+        print("{} CreateChunk {}".format(self.port, chunkHandle))
+        status = self.ckser.create(chunkHandle)
         return gfs_pb2.String(st=status.e)
 
     def Append(self, request, context):
-        chunk_handle, data = request.st.split("|")
-        print("{} Append {} {}".format(self.port, chunk_handle, data))
-        status = self.ckser.append(chunk_handle, data)
+        chunkHandle, data = request.st.split("|")
+        print("{} Append {} {}".format(self.port, chunkHandle, data))
+        status = self.ckser.append(chunkHandle, data)
         return gfs_pb2.String(st=status.e)
 
     def Read(self, request, context):
-        chunk_handle, start_offset, numbytes = request.st.split("|")
-        print("{} Read {} {}".format(chunk_handle, start_offset, numbytes))
-        status = self.ckser.read(chunk_handle, start_offset, numbytes)
+        chunkHandle, startOffset, numbytes = request.st.split("|")
+        print("{} Read {} {}".format(chunkHandle, startOffset, numbytes))
+        status = self.ckser.read(chunkHandle, startOffset, numbytes)
         return gfs_pb2.String(st=status.e)
 
 def start(port):
