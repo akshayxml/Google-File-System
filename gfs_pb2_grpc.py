@@ -245,11 +245,6 @@ class ChunkServerStub(object):
                 request_serializer=gfs__pb2.String.SerializeToString,
                 response_deserializer=gfs__pb2.String.FromString,
                 )
-        self.GetChunkSpace = channel.unary_unary(
-                '/gfs.ChunkServer/GetChunkSpace',
-                request_serializer=gfs__pb2.String.SerializeToString,
-                response_deserializer=gfs__pb2.String.FromString,
-                )
         self.Append = channel.unary_unary(
                 '/gfs.ChunkServer/Append',
                 request_serializer=gfs__pb2.String.SerializeToString,
@@ -266,12 +261,6 @@ class ChunkServerServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Create(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetChunkSpace(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -294,11 +283,6 @@ def add_ChunkServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Create': grpc.unary_unary_rpc_method_handler(
                     servicer.Create,
-                    request_deserializer=gfs__pb2.String.FromString,
-                    response_serializer=gfs__pb2.String.SerializeToString,
-            ),
-            'GetChunkSpace': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetChunkSpace,
                     request_deserializer=gfs__pb2.String.FromString,
                     response_serializer=gfs__pb2.String.SerializeToString,
             ),
@@ -334,23 +318,6 @@ class ChunkServer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/gfs.ChunkServer/Create',
-            gfs__pb2.String.SerializeToString,
-            gfs__pb2.String.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetChunkSpace(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/gfs.ChunkServer/GetChunkSpace',
             gfs__pb2.String.SerializeToString,
             gfs__pb2.String.FromString,
             options, channel_credentials,

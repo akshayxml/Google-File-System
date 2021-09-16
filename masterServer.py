@@ -5,9 +5,8 @@ import grpc
 import random
 import gfs_pb2
 import gfs_pb2_grpc
-from common import Status
 from concurrent import futures
-from common import Config
+from util import Status, Config
 from collections import OrderedDict
 
 class loadBalancer():
@@ -111,7 +110,6 @@ class MasterServer(object):
 
         startChunk = offset // Config.chunkSize
         allChunks = list(self.files[filePath].chunks.keys())
-        print(allChunks)
         if startChunk > len(allChunks):
             return Status(-1, "ERROR: Offset is too large")
 

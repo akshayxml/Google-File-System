@@ -4,7 +4,6 @@ class Config(object):
     chunkserverLocs = ["50052", "50053", "50054", "50055", "50056"]
     rootDir = "root"
 
-
 class Status(object):
     def __init__(self, v, e):
         self.v = v

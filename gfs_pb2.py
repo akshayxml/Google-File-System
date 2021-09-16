@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\tgfs.proto\x12\x03gfs\"\x14\n\x06String\x12\n\n\x02st\x18\x01 \x01(\t\"\x07\n\x05\x45mpty2\x82\x02\n\x06Master\x12\'\n\tListFiles\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nCreateFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nAppendFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12)\n\x0b\x43reateChunk\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12&\n\x08ReadFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nDeleteFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x32\xaa\x01\n\x0b\x43hunkServer\x12$\n\x06\x43reate\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12+\n\rGetChunkSpace\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12$\n\x06\x41ppend\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12\"\n\x04Read\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\tgfs.proto\x12\x03gfs\"\x14\n\x06String\x12\n\n\x02st\x18\x01 \x01(\t\"\x07\n\x05\x45mpty2\x82\x02\n\x06Master\x12\'\n\tListFiles\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nCreateFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nAppendFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12)\n\x0b\x43reateChunk\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12&\n\x08ReadFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12(\n\nDeleteFile\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x32}\n\x0b\x43hunkServer\x12$\n\x06\x43reate\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12$\n\x06\x41ppend\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x12\"\n\x04Read\x12\x0b.gfs.String\x1a\x0b.gfs.String\"\x00\x62\x06proto3'
 )
 
 
@@ -184,8 +184,8 @@ _CHUNKSERVER = _descriptor.ServiceDescriptor(
   index=1,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=311,
-  serialized_end=481,
+  serialized_start=310,
+  serialized_end=435,
   methods=[
   _descriptor.MethodDescriptor(
     name='Create',
@@ -198,19 +198,9 @@ _CHUNKSERVER = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='GetChunkSpace',
-    full_name='gfs.ChunkServer.GetChunkSpace',
-    index=1,
-    containing_service=None,
-    input_type=_STRING,
-    output_type=_STRING,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
     name='Append',
     full_name='gfs.ChunkServer.Append',
-    index=2,
+    index=1,
     containing_service=None,
     input_type=_STRING,
     output_type=_STRING,
@@ -220,7 +210,7 @@ _CHUNKSERVER = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='Read',
     full_name='gfs.ChunkServer.Read',
-    index=3,
+    index=2,
     containing_service=None,
     input_type=_STRING,
     output_type=_STRING,

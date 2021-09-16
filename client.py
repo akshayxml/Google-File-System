@@ -3,11 +3,11 @@ import sys
 import grpc
 import gfs_pb2
 import gfs_pb2_grpc
-from common import Config as cfg
+from util import Config
 
 class Client():
     def __init__(self):
-        masterChannel = grpc.insecure_channel("127.0.0.1:"+str(cfg.masterLoc))
+        masterChannel = grpc.insecure_channel("127.0.0.1:"+str(Config.masterLoc))
         self.masterStub = gfs_pb2_grpc.MasterStub(masterChannel)
 
     def createFile(self,filePath):
