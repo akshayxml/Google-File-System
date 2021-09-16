@@ -47,12 +47,6 @@ class MasterServer(object):
         latestChunkHandle = list(self.files[filePath].chunks.keys())[-1]
         return latestChunkHandle
 
-    def getChunkLocs(self, chunkHandle, filePath):
-        return self.files[filePath].chunks[chunkHandle].locs
-
-    def getChunkHandle(self):
-        return str(uuid.uuid1())
-
     def listFiles(self, filePath):
         fileList = []
         for fp in self.files.keys():
@@ -72,7 +66,7 @@ class MasterServer(object):
             return None, None, Status(-1, "ERROR: file {} doesn't exist".format(filePath))
 
         latestChunkHandle = self.getLatestChunk(filePath)
-        locs = self.getChunkLocs(latestChunkHandle, filePath)
+        locs = self.files[filePath].chunks[latestChunkHandle].locs
         status = Status(0, "Success")
         return latestChunkHandle, locs, status
     
@@ -85,7 +79,7 @@ class MasterServer(object):
         if prevChunkHandle != -1 and latestChunk != prevChunkHandle:
             return Status(-3, "ERROR: New chunk already created: {} : {}".format(filePath, chunkHandle))
 
-        chunkHandle = self.getChunkHandle()
+        chunkHandle = str(uuid.uuid1())
         self.files[filePath].chunks[chunkHandle] = Chunk()
 
         locs = self.loadBalancer.getLocs()

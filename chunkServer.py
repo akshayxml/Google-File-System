@@ -12,25 +12,21 @@ class ChunkServer(object):
     def __init__(self, port, root):
         self.port = port
         self.root = root
-        if not os.path.isdir(root):
-            os.mkdir(root)
 
     def create(self, chunkHandle):
         try:
             open(os.path.join(self.root, chunkHandle), 'w').close()
-        except Exception as e:
-            return Status(-1, "ERROR :" + str(e))
-        else:
             return Status(0, "SUCCESS: chunk created")
+        except Exception as e:
+            return Status(-1, "ERROR :" + str(e))            
 
     def append(self, chunkHandle, data):
         try:
             with open(os.path.join(self.root, chunkHandle), "a") as f:
                 f.write(data)
-        except Exception as e:
-            return Status(-1, "ERROR: " + str(e))
-        else:
             return Status(0, "SUCCESS: data appended")
+        except Exception as e:
+            return Status(-1, "ERROR: " + str(e))            
 
     def read(self, chunkHandle, startOffset, numbytes):
         startOffset = int(startOffset)
@@ -39,11 +35,9 @@ class ChunkServer(object):
             with open(os.path.join(self.root, chunkHandle), "r") as f:
                 f.seek(startOffset)
                 ret = f.read(numbytes)
+            return Status(0, ret)
         except Exception as e:
             return  Status(-1, "ERROR: " + str(e))
-        else:
-            return Status(0, ret)
-
 
 class ChunkServerServicer(gfs_pb2_grpc.ChunkServerServicer):
     def __init__(self, chunkServer):
