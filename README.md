@@ -8,7 +8,7 @@ Python implementation of [Google File System](https://static.googleusercontent.c
 - gRPC
 
 ## Run
-- Open three terminals, and type run `chunkServer.py`, `masterServer.py` and `client.py` in each of them.
+- Open three terminals, and run `chunkServer.py`, `masterServer.py` and `client.py` in each of them.
 - Type in the supported commands in the terminal which is running `client.py`.
 
 ### Commands
